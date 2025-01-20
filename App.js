@@ -1,20 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { initializeDb } from './services/database';
+import Navigation from './navigation';
+import Loading from './components/Loading';
+import { Provider as PaperProvider } from 'react-native-paper';
 
-export default function App() {
+const App = () => {
+  const [isDbInitialized, setIsDbInitialized] = useState(false);
+
+  useEffect(() => {
+    const initialize = async () => {
+      await initializeDb();
+      setIsDbInitialized(true);
+    };
+    
+    initialize();
+  }, []);
+
+  if (!isDbInitialized) {
+    return <Loading />;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <PaperProvider>
+      <NavigationContainer>
+        <Navigation />
+      </NavigationContainer>
+    </PaperProvider>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;

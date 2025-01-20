@@ -1,16 +1,12 @@
 class SavingGroup {
-    constructor(id, name, targetAmount, savedAmount, createdAt, parentId = null) {
+    constructor(id, name, parentId, color, targetAmount, savedAmount,  createdAt) {
       this.id = id;
       this.name = name;
+      this.parentId = parentId;
+      this.color = color;
       this.targetAmount = targetAmount;
       this.savedAmount = savedAmount;
       this.createdAt = createdAt;
-      this.parentId = parentId; // Si es un subgrupo de ahorro
-    }
-  
-    // Método para actualizar la cantidad ahorrada
-    updateSavedAmount(amount) {
-      this.savedAmount += amount;
     }
   }
   

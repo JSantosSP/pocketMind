@@ -3,7 +3,7 @@ class SavingTransaction {
       this.id = id;
       this.savingGroupId = savingGroupId;
       this.amount = amount;
-      this.type = type; // "deposit" o "withdraw"
+      this.type = type; // "income"(true) o "expense"(false)
       this.createdAt = createdAt;
     }
   }
