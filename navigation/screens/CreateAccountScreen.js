@@ -30,7 +30,7 @@ const CreateAccountScreen = ({ route, navigation }) => {
   }, [isEdit, accountId]);
 
   const handleSave = async () => {
-    if (!balance || !pais) {
+    if (!balance || !pais || !name)  {
       Alert.alert('Error', 'Por favor, completa todos los campos');
       return;
     }

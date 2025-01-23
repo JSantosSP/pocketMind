@@ -38,7 +38,11 @@ const CreateTransactionGroupScreen = ({ route, navigation }) => {
       Alert.alert('Error', 'Por favor, completa todos los campos');
       return;
     }
-    if(isIncome){
+    if (isIncome) {
+      if (parseFloat(group.targetAmount) < parseFloat(amount) + parseFloat(group.savedAmount)) {
+        Alert.alert('Error', 'El monto ahorrado no puede ser mayor a la meta de ahorro');
+        return;
+      }
       handleCheckTransactionsGroup(account, (libre) => {
         if ((libre) < amount) {
           Alert.alert('Error', 'No tienes suficiente dinero en la cuenta');

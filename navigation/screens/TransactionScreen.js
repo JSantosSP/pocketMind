@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, KeyboardAvoidingView, Platform, FlatList, ScrollView } from 'react-native';
+import { View, KeyboardAvoidingView, Platform, FlatList, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, Menu } from 'react-native-paper';
 import { handleCreateSavingTransaction, handleCreateTransaction, handleGetCategories, handleGetSavingGroups } from '../../controllers/accountController';
 import Transaction from '../../models/Transaction';
@@ -31,11 +31,24 @@ const TransactionScreen = ({ route, navigation }) => {
 
 
     const handleSubmit = async () => {
-        if (!amount || !category) return;
+        if (!amount || (!isIncome && !category)) {
+            Alert.alert('Error', 'Por favor, completa todos los campos');
+            return;
+        }
         let sum = 0;
-        savingGroups.forEach((g) => {
-            sum += g.percentage;
-        });
+        for (const group of savingGroups) {
+            if (group.percentage > 0) {
+                const groupAmount = numericAmount * (group.percentage / 100);
+                if ((group.currentSaving || 0) + groupAmount > group.target) {
+                    Alert.alert(
+                        'Error',
+                        `El monto asignado al grupo "${group.name}" supera su objetivo. Revise los porcentajes.`
+                    );
+                    return;
+                }
+                sum += g.percentage;
+            }
+        }
         if (sum > 100) {
             alert('La suma de los porcentajes no puede ser mayor a 100');
             return;
@@ -66,7 +79,7 @@ const TransactionScreen = ({ route, navigation }) => {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, padding: 16 }}>
             <TextInput label="Cantidad" keyboardType="numeric" value={amount} onChangeText={setAmount} />
 
-            <View style={{ zIndex: 2000 }}>
+            {!isIncome && (<View style={{ zIndex: 2000 }}>
                 <Menu
                     visible={openCategory}
                     onDismiss={() => setOpenCategory(false)}
@@ -90,7 +103,7 @@ const TransactionScreen = ({ route, navigation }) => {
                     ))}
                     </ScrollView>
                 </Menu>
-            </View>
+            </View>)}
 
 
             <FlatList

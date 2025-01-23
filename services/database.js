@@ -303,6 +303,28 @@ const updateSavingGroupAmount = async (groupId, type, amount) => {
     await statement.finalizeAsync();
   }
 }
+const deleteSavingTransactions = async (groupId) => {
+  const db = await openDatabase();
+  const statement = await db.prepareAsync('DELETE FROM saving_transactions WHERE saving_group_id = $id');
+  try {
+    const result = await statement.executeAsync({ $id: groupId });
+    return result;
+  } finally {
+    await statement.finalizeAsync();
+  }
+};
+
+const deleteSavingGroup = async (id) => {
+  const db = await openDatabase();
+  await deleteSavingTransactions(id);
+  const statement = await db.prepareAsync('DELETE FROM saving_groups WHERE id = $id');
+  try {
+    const result = await statement.executeAsync({ $id: id });
+    return result;
+  } finally {
+    await statement.finalizeAsync();
+  }
+};
 
 export {
   deleteDatabase,
@@ -321,4 +343,6 @@ export {
   createSavingTransaction,
   getSavingTransactions,
   updateSavingGroupAmount,
+  deleteSavingGroup,
+  deleteSavingTransactions
 };

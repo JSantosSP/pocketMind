@@ -6,6 +6,8 @@ import SettingsScreen from './screens/SettingsScreen';
 import TransactionScreen from './screens/TransactionScreen';
 import CreateSavingGroupScreen from './screens/CreateSavingGroupScreen';
 import CreateTransactionGroupScreen from './screens/CreateTransactionGroupScreen';
+import OptionsScreen from './screens/OptionsScreen';
+import DeleteGroupScreen from './screens/DeleteGroupScreen';
 const Stack = createStackNavigator();
 
 const Navigation = () => {
@@ -17,6 +19,8 @@ const Navigation = () => {
       <Stack.Screen name="Transaction" component={TransactionScreen} options={{ title: 'Transaccion' }} />
       <Stack.Screen name="CreateSavingGroupScreen" component={CreateSavingGroupScreen} options={{ title: 'Crear Grupo' }} />
       <Stack.Screen name="CreateTransactionGroupScreen" component={CreateTransactionGroupScreen} options={{ title: 'Transaction Group' }} />
+      <Stack.Screen name="Options" component={OptionsScreen} options={{ title: 'Options' }} />
+      <Stack.Screen name="DeleteGroupScreen" component={DeleteGroupScreen} options={{ title: 'Delete Group' }} />
     </Stack.Navigator>
   );
 };

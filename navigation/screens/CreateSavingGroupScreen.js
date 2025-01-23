@@ -41,16 +41,17 @@ const CreateSavingGroupScreen = ({ route, navigation }) => {
   }, [parentId, isEdit, savingGroupId]);
 
   const handleSave = async () => {
-    if (!name || !targetAmount || color === '') {
+    if (!name || !targetAmount || color === '' || !color) {
       Alert.alert('Error', 'Por favor, completa todos los campos');
       return;
     }
-
-    if (isEdit) {
-      if (parseFloat(targetAmount) < parseFloat(savedAmount)) {
+    if (parseFloat(targetAmount) <= parseFloat(savedAmount)) {
         Alert.alert('Error', 'El monto ahorrado no puede ser mayor a la meta de ahorro', [{ text: 'OK' }]);
         return;
       }
+
+    if (isEdit) {
+      
       const updateSuccess = await handleUpdateSavingGroup(savingGroupId, name, parseFloat(targetAmount), parseFloat(savedAmount));
       if (updateSuccess) {
         Alert.alert('Éxito', 'Grupo de ahorro actualizado correctamente', [
@@ -67,10 +68,6 @@ const CreateSavingGroupScreen = ({ route, navigation }) => {
             return;
           }
         });
-      }
-      if (parseFloat(targetAmount) < parseFloat(savedAmount)) {
-        Alert.alert('Error', 'El monto ahorrado no puede ser mayor a la meta de ahorro', [{ text: 'OK' }]);
-        return;
       }
       const createSuccess = await handleCreateSavingGroup(name, parseFloat(targetAmount), parseFloat(0), color, parentId);
 

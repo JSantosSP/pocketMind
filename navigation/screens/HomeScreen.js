@@ -1,15 +1,20 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, ScrollView, Dimensions } from "react-native";
-import { PieChart } from "react-native-chart-kit";
+import { PieChart, ProgressChart } from "react-native-chart-kit";
 import { useNavigation } from "@react-navigation/native";
 import { handleCheckTransactionsGroup, handleGetMainAccount, handleGetSavingGroups } from "../../controllers/accountController";
-import { Button, Card, Text } from "react-native-paper";
+import { Card, Text } from "react-native-paper";
 import { useFocusEffect } from '@react-navigation/native';
+import FloatingButton from "../../components/FloatingButton";
 const screenWidth = Dimensions.get("window").width;
 
 const HomeScreen = () => {
   const [account, setAccount] = useState(null);
   const navigation = useNavigation();
+  const [dataTargets, setDataTargets] = useState({
+    labels: [], 
+    data: []
+  });
   const [data, setData] = useState({
     labels: ["Gastos", "Ingresos", "Ahorros"],
     datasets: [
@@ -19,6 +24,40 @@ const HomeScreen = () => {
       },
     ],
   });
+
+  const chartConfig = {
+  backgroundGradientFrom: "transparent",
+  backgroundGradientFromOpacity: 0,
+  backgroundGradientTo: "transparent",
+  backgroundGradientToOpacity: 0,
+  fillShadowGradientFrom: "#1E2923",
+  fillShadowGradientFromOpacity: 0.5,
+  fillShadowGradientFromOffset: 0,
+  fillShadowGradientTo: "#08130D",
+  fillShadowGradientToOpacity: 0.5,
+  fillShadowGradientToOffset: 1,
+  useShadowColorFromDataset: false,
+  color: ( opacity = 1) => `rgba(0, 0, 2555, ${opacity})`,
+  strokeWidth: 2, // optional, default 3
+  barPercentage: 0.5,
+  barRadius: 5,
+  propsForBackgroundLines: {
+    stroke: "#e3e3e3",
+    strokeDasharray: "5, 5"
+  },
+  propsForLabels: {
+    fontSize: 12,
+    fill: "#000"
+  },
+  propsForVerticalLabels: {
+    fontSize: 12,
+    fill: "#000"
+  },
+  propsForHorizontalLabels: {
+    fontSize: 12,
+    fill: "#000"
+  }
+};
 
   useFocusEffect(
     useCallback(() => {
@@ -39,13 +78,19 @@ const HomeScreen = () => {
                   },
                 ],
               };
+              const dataTargets = {
+                labels: [], 
+                data: []
+              };
           
               savingGroups.forEach((savingGroup) => {
                 data.labels.push(savingGroup.name);
+                dataTargets.labels.push(savingGroup.name);
                 data.datasets[0].data.push(savingGroup.savedAmount);
                 data.datasets[0].backgroundColor.push(savingGroup.color);
+                dataTargets.data.push(savingGroup.savedAmount / savingGroup.targetAmount);
               });
-
+              setDataTargets(dataTargets);
               setData(data);
             });
           });
@@ -89,6 +134,10 @@ const HomeScreen = () => {
     legendFontSize: 15,
   }));
 
+  const handleOpenOptions = () => {
+    navigation.navigate("Options", { accountId: account.id });
+  };
+
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: "center", padding: 20 }}>
       <Card
@@ -115,6 +164,7 @@ const HomeScreen = () => {
       </Card>
 
       <Card style={{ width: "100%", padding: 10, alignItems: "center" }}>
+        <Text style={{ fontWeight: "bold", marginBottom: 20, textAlign: "center" }}>GRUPOS</Text>
         <PieChart
           data={chartData}
           width={screenWidth * 0.9}
@@ -131,52 +181,21 @@ const HomeScreen = () => {
           absolute={true}  
         />
       </Card>
-
-      <Button
-        style={{ width: "100%", margin: 10 }}
-        mode="contained"
-        onPress={() =>
-          navigation.navigate("CreateAccount", { isEdit: false, isMain: false })
-        }
-      >
-        Añadir Cuenta
-      </Button>
-      <Button
-        style={{ width: "100%", margin: 10 }}
-        mode="contained"
-        onPress={() =>
-          navigation.navigate("Transaction", { isIncome: false, accountId: account.id })
-        }
-      >
-        Añadir dinero
-      </Button>
-      <Button
-        style={{ width: "100%", margin: 10 }}
-        mode="contained"
-        onPress={() =>
-          navigation.navigate("Settings")
-        }
-      >
-        Settings
-      </Button>
-      <Button
-        style={{ width: "100%", margin: 10 }}
-        mode="contained"
-        onPress={() =>
-          navigation.navigate("CreateSavingGroupScreen", { isEdit: false, parentId: account.id })
-        }
-      >
-        Añadir Grupo
-      </Button>
-      <Button
-        style={{ width: "100%", margin: 10 }}
-        mode="contained"
-        onPress={() =>
-          navigation.navigate("CreateTransactionGroupScreen", { accountId: account.id, isIncome: true })
-        }
-      >
-        Ingresar Dinero a Grupo
-      </Button>
+      <Card style={{ width: "100%", padding: 10, alignItems: "center", marginTop: 20 }}>
+        <Text style={{ fontWeight: "bold", marginBottom: 20, textAlign: "center" }}>OBJETIVOS</Text>
+        <ProgressChart
+          data={dataTargets}
+          width={screenWidth * 0.9}
+          height={220}
+          strokeWidth={16}
+          radius={32}
+          chartConfig={chartConfig}
+          backgroundColor="transparent"
+          hideLegend={false}
+          absolute={true}
+        />
+      </Card>
+      <FloatingButton onPress={handleOpenOptions}  iconName="menu"/>
     </ScrollView>
   );
 };

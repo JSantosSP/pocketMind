@@ -12,7 +12,8 @@ import {
   updateAccountBalance,
   updateSavingGroup,
   updateSavingGroupAmount,
-  getSavingTransactions
+  getSavingTransactions,
+  deleteSavingGroup
 } from '../services/database';
 import Account from '../models/Account';
 import Transaction from '../models/Transaction';
@@ -108,11 +109,6 @@ const handleDeleteAccount = async (id) => {
 // Controlador para crear una transacción
 const handleCreateTransaction = async (accountId, type, amount, categoryId, description) => {
   try {
-    console.log('accountId:', accountId);
-    console.log('type:', type);
-    console.log('amount:', amount);
-    console.log('categoryId:', categoryId);
-    console.log('description:', description);
     await updateAccountBalance(accountId, type, amount).then(async()=>{ await createTransaction(accountId, type, amount, categoryId, description);
     }).catch((error) => {
       console.error('Error al actualizar la cuenta:', error);
@@ -122,6 +118,16 @@ const handleCreateTransaction = async (accountId, type, amount, categoryId, desc
   } catch (error) {
     console.error('Error al crear la transacción:', error);
     return false;  // Si hubo un error al crear la transacción
+  }
+};
+
+const handleDeleteGrupo = async (grupoId) => {
+  try {
+    await deleteSavingGroup(grupoId);
+    return true;  // Si el grupo fue eliminado correctamente
+  } catch (error) {
+    console.error('Error al eliminar el grupo:', error);
+    return false;  // Si hubo un error al eliminar el grupo
   }
 };
 
@@ -293,5 +299,6 @@ export {
   handleCreateSavingTransaction,
   handleGetSavingTransactions,
   handleGetSavingGroupById,
-  handleCheckTransactionsGroup
+  handleCheckTransactionsGroup,
+  handleDeleteGrupo
 };
