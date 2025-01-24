@@ -87,11 +87,10 @@ const handleCheckTransactionsGroup = async (account, callback) => {
       }
     }
     const libre = account.balance - total;
-    callback(libre);
-    return true;  // Si obtuvimos la cuenta principal correctamente
+    return libre;  // Si obtuvimos la cuenta principal correctamente
   } catch (error) {
     console.error('Error al obtener la cuenta:', error);
-    return false;  // Si hubo un error al obtener la cuenta principal
+    return 0;  // Si hubo un error al obtener la cuenta principal
   }
 };
 

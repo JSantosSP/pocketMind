@@ -66,33 +66,38 @@ const HomeScreen = () => {
         await handleGetMainAccount(async (mainAccount) => {
           account = mainAccount;
           setAccount(mainAccount);
-        }).then(async () => {
-          await handleCheckTransactionsGroup(account, async (libre) => {
-            await handleGetSavingGroups(account.id, (savingGroups) => {
-              const data = {
-                labels: ["Libre"],
-                datasets: [
-                  {
-                    data: [libre],
-                    backgroundColor: ["#0000FF"],
-                  },
-                ],
-              };
-              const dataTargets = {
-                labels: [], 
-                data: []
-              };
-          
-              savingGroups.forEach((savingGroup) => {
-                data.labels.push(savingGroup.name);
-                dataTargets.labels.push(savingGroup.name);
-                data.datasets[0].data.push(savingGroup.savedAmount);
-                data.datasets[0].backgroundColor.push(savingGroup.color);
-                dataTargets.data.push(savingGroup.savedAmount / savingGroup.targetAmount);
-              });
-              setDataTargets(dataTargets);
-              setData(data);
+          if (account === undefined) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: "CreateAccount", params: { isEdit: false, isMain: true } }],
             });
+          }
+        }).then(async () => {
+          const libre = await handleCheckTransactionsGroup(account);
+          await handleGetSavingGroups(account?.id, (savingGroups) => {
+            const data = {
+              labels: ["Libre"],
+              datasets: [
+                {
+                  data: [libre],
+                  backgroundColor: ["#0000FF"],
+                },
+              ],
+            };
+            const dataTargets = {
+              labels: [], 
+              data: []
+            };
+        
+            savingGroups.forEach((savingGroup) => {
+              data.labels.push(savingGroup.name);
+              dataTargets.labels.push(savingGroup.name);
+              data.datasets[0].data.push(savingGroup.savedAmount);
+              data.datasets[0].backgroundColor.push(savingGroup.color);
+              dataTargets.data.push(savingGroup.savedAmount / savingGroup.targetAmount);
+            });
+            setDataTargets(dataTargets);
+            setData(data);
           });
         });
       };
@@ -148,13 +153,26 @@ const HomeScreen = () => {
           padding: 10,
         }}
       >
-        <Card.Title
-          title={account.name.toUpperCase()}
-          titleStyle={{ textAlign: "center" }}
-        />
+        <Text
+          style={{
+            textAlign: "center", // Centra el texto horizontalmente
+            flexWrap: "wrap", // Permite ajustar el texto a múltiples líneas
+            width: "100%", // Asegura que el texto ocupe todo el ancho del contenedor
+            fontSize: 18, // Ajusta el tamaño según necesites
+            fontWeight: "bold", // Opcional: Destaca el título
+            lineHeight: 22, // Evita que las líneas se monten entre sí
+            marginBottom: 10, // Espaciado inferior para separar del balance
+          }}
+        >
+          {account.name.toUpperCase()}
+        </Text>
         <Text
           variant="headlineLarge"
-          style={{ fontWeight: "bold", marginBottom: 20, textAlign: "center" }}
+          style={{
+            fontWeight: "bold",
+            marginBottom: 20,
+            textAlign: "center",
+          }}
         >
           {account.balance.toLocaleString(account.locale, {
             style: "currency",
@@ -162,6 +180,7 @@ const HomeScreen = () => {
           })}
         </Text>
       </Card>
+
 
       <Card style={{ width: "100%", padding: 10, alignItems: "center" }}>
         <Text style={{ fontWeight: "bold", marginBottom: 20, textAlign: "center" }}>GRUPOS</Text>
@@ -195,7 +214,7 @@ const HomeScreen = () => {
           absolute={true}
         />
       </Card>
-      <FloatingButton onPress={handleOpenOptions}  iconName="menu"/>
+      <FloatingButton onPress={handleOpenOptions}  iconName="menu" position = 'top-right'/>
     </ScrollView>
   );
 };

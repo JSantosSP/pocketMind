@@ -43,12 +43,12 @@ const CreateTransactionGroupScreen = ({ route, navigation }) => {
         Alert.alert('Error', 'El monto ahorrado no puede ser mayor a la meta de ahorro');
         return;
       }
-      handleCheckTransactionsGroup(account, (libre) => {
-        if ((libre) < amount) {
-          Alert.alert('Error', 'No tienes suficiente dinero en la cuenta');
-          return;
-        }
-      });
+      const libre = await handleCheckTransactionsGroup(account); 
+
+      if ((libre) < amount) {
+        Alert.alert('Error', 'No tienes suficiente dinero en la cuenta');
+        return;
+      }
     }
     else {
       if(group.savedAmount < amount){

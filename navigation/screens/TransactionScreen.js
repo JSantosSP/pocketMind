@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { View, KeyboardAvoidingView, Platform, FlatList, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text, Menu } from 'react-native-paper';
-import { handleCreateSavingTransaction, handleCreateTransaction, handleGetCategories, handleGetSavingGroups } from '../../controllers/accountController';
-import Transaction from '../../models/Transaction';
+import { handleCheckTransactionsGroup, handleCreateSavingTransaction, handleCreateTransaction, handleGetAccount, handleGetCategories, handleGetSavingGroups } from '../../controllers/accountController';
+
 
 const TransactionScreen = ({ route, navigation }) => {
     const { isIncome, accountId } = route.params;
 
     const [amount, setAmount] = useState('');
+    const [account, setAccount] = useState(null);
     const [category, setCategory] = useState(null);
     const [categories, setCategories] = useState([]);
     const [description, setDescription] = useState('');
     const [savingGroups, setSavingGroups] = useState([]);
     const [selectedCategoria, setSelectedCategoria] = useState(null);
-    const [allocatedGroups, setAllocatedGroups] = useState([]);
     const [openCategory, setOpenCategory] = useState(false);
-    const [openGroup, setOpenGroup] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
+            await handleGetAccount(accountId, (account) => {
+                setAccount(account);
+            });
             await handleGetCategories((categoryList) => {
                 setCategories(categoryList);
             });
@@ -36,33 +38,61 @@ const TransactionScreen = ({ route, navigation }) => {
             return;
         }
         let sum = 0;
+        let sumGroups = 0;
         for (const group of savingGroups) {
             if (group.percentage > 0) {
-                const groupAmount = numericAmount * (group.percentage / 100);
-                if ((group.currentSaving || 0) + groupAmount > group.target) {
-                    Alert.alert(
-                        'Error',
-                        `El monto asignado al grupo "${group.name}" supera su objetivo. Revise los porcentajes.`
-                    );
-                    return;
+                const groupAmount = amount * (group.percentage / 100);
+                sumGroups += groupAmount;
+                if (isIncome) {
+                    if ((group.savedAmount || 0) + groupAmount > group.targetAmount) {
+                        Alert.alert(
+                            'Error',
+                            `El monto asignado al grupo "${group.name}" supera su objetivo. Revise los porcentajes.`
+                        );
+                        return;
+                    }
+                } else {
+                    if (groupAmount > group.savedAmount) {
+                        Alert.alert(
+                            'Error',
+                            `El monto asignado al grupo "${group.name}" supera el monto disponible. Revise los porcentajes.`
+                        );
+                        return;
+                    }
                 }
-                sum += g.percentage;
+                sum += group.percentage;
             }
+
         }
+
         if (sum > 100) {
             alert('La suma de los porcentajes no puede ser mayor a 100');
             return;
         }
-        await handleCreateTransaction(accountId, isIncome, amount, category, description).then(async () => {
-            
-            if (sum > 0) {
-                for (const group of savingGroups) {
-                    const groupAmount = amount * (group.percentage / 100);
-                    await handleCreateSavingTransaction(group.id, groupAmount, isIncome);
-                }
+        let ok = false;
+        if (!isIncome) {            
+            const libre = await handleCheckTransactionsGroup(account);
+            if ((libre + sumGroups) < amount) {
+                Alert.alert('Error', 'No tienes suficiente dinero en la cuenta');
+                ok = false
             }
-            navigation.goBack();
-        });
+            else {
+                ok = true;
+            }
+        }
+        if(ok || isIncome) {
+            await handleCreateTransaction(accountId, isIncome, amount, category, description).then(async () => {
+            
+                if (sum > 0) {
+                    for (const group of savingGroups) {
+                        const groupAmount = amount * (group.percentage / 100);
+                        await handleCreateSavingTransaction(group.id, groupAmount, isIncome);
+                    }
+                }
+                navigation.goBack();
+            });
+        }
+        
     };
 
     const updatePercentage = (id, percentage) => {

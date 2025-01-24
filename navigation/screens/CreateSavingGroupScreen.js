@@ -62,12 +62,11 @@ const CreateSavingGroupScreen = ({ route, navigation }) => {
       }
     } else {
       if (0 < parseFloat(savedAmount)) {
-        await handleCheckTransactionsGroup(account.id, (libre) => {
-          if (libre < parseFloat(savedAmount)) {
-            Alert.alert('Error', 'No tienes suficiente dinero en tu cuenta principal para crear este grupo de ahorro', [{ text: 'OK' }]);
-            return;
-          }
-        });
+        const libre = await handleCheckTransactionsGroup(account); 
+        if (libre < parseFloat(savedAmount)) {
+          Alert.alert('Error', 'No tienes suficiente dinero en tu cuenta principal para crear este grupo de ahorro', [{ text: 'OK' }]);
+          return;
+        }
       }
       const createSuccess = await handleCreateSavingGroup(name, parseFloat(targetAmount), parseFloat(0), color, parentId);
 
