@@ -135,7 +135,7 @@ const TransactionScreen = ({ route, navigation }) => {
                 </Menu>
             </View>)}
 
-
+                    <Text style={{textAlign:"right"}}>Porcentajes de reparto</Text>
             <FlatList
                 data={savingGroups}
                 keyExtractor={item => item.id.toString()}
