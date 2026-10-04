@@ -9,6 +9,7 @@ import CreateTransactionGroupScreen from './screens/CreateTransactionGroupScreen
 import OptionsScreen from './screens/OptionsScreen';
 import DeleteGroupScreen from './screens/DeleteGroupScreen';
 import HistoryScreen from './screens/HistoryScreen';
+import CalculatorScreen from './screens/CalculatorScreen';
 const Stack = createStackNavigator();
 
 const Navigation = () => {
@@ -23,6 +24,7 @@ const Navigation = () => {
       <Stack.Screen name="Options" component={OptionsScreen} options={{ title: 'Options' }} />
       <Stack.Screen name="DeleteGroupScreen" component={DeleteGroupScreen} options={{ title: 'Delete Group' }} />
       <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'Historial' }} />
+      <Stack.Screen name="Calculator" component={CalculatorScreen} options={{ title: 'Calculadora' }} />
     </Stack.Navigator>
   );
 };

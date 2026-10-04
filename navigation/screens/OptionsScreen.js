@@ -41,6 +41,11 @@ const OptionsScreen = ({ route }) => {
       onPress: () => navigation.navigate("History", { accountId }),
     },
     {
+      label: 'Calculadora',
+      icon: <MaterialCommunityIcons name="calculator" size={24} color="white" />,
+      onPress: () => navigation.navigate("Calculator", { accountId }),
+    },
+    {
       label: 'Configuración',
       icon: <AntDesign name="setting" size={24} color="white" />,
       onPress: () => navigation.navigate("Settings"),
