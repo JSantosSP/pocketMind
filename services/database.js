@@ -4,6 +4,7 @@ import Transaction from '../models/Transaction';
 import Category from '../models/Category';
 import SavingGroup from '../models/SavingGroup';
 import SavingTransaction from '../models/SavingTransaction';
+import MonthlySummary from '../models/MonthlySummary';
 
 let db;
 
@@ -25,7 +26,8 @@ const deleteDatabase = async () => {
       "accounts",
       "categories",
       "saving_groups",
-      "saving_transactions"
+      "saving_transactions",
+      "monthly_summaries"
     ];
 
     for (const table of tables) {
@@ -89,6 +91,17 @@ const initializeDb = async () => {
     type BOOLEAN, 
     created_at TIMESTAMP, 
     FOREIGN KEY(saving_group_id) REFERENCES saving_groups(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS monthly_summaries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER,
+    year INTEGER,
+    month INTEGER,
+    expenses REAL,
+    income REAL,
+    UNIQUE(account_id, year, month),
+    FOREIGN KEY(account_id) REFERENCES accounts(id)
   );
 
   -- Insert default categories
@@ -326,6 +339,58 @@ const deleteSavingGroup = async (id) => {
   }
 };
 
+const getMonthlySummaries = async (accountId, year) => {
+  const db = await openDatabase();
+  const result = await db.getAllAsync(
+    'SELECT * FROM monthly_summaries WHERE account_id = ? AND year = ?',
+    [accountId, year]
+  );
+  return result.map(row => new MonthlySummary(row.id, row.account_id, row.year, row.month, row.expenses, row.income));
+};
+
+const upsertMonthlySummaries = async (rows) => {
+  const db = await openDatabase();
+  const statement = await db.prepareAsync(
+    `INSERT INTO monthly_summaries (account_id, year, month, expenses, income)
+     VALUES ($account_id, $year, $month, $expenses, $income)
+     ON CONFLICT(account_id, year, month) DO UPDATE SET
+       expenses = excluded.expenses,
+       income = excluded.income`
+  );
+  try {
+    for (const row of rows) {
+      await statement.executeAsync({
+        $account_id: row.accountId,
+        $year: row.year,
+        $month: row.month,
+        $expenses: row.expenses,
+        $income: row.income
+      });
+    }
+  } finally {
+    await statement.finalizeAsync();
+  }
+};
+
+const getYearTransactionTotals = async (accountId, year) => {
+  const db = await openDatabase();
+  const result = await db.getAllAsync(
+    `SELECT
+       CAST(substr(created_at, 6, 2) AS INTEGER) as month,
+       SUM(CASE WHEN type THEN amount ELSE 0 END) as income,
+       SUM(CASE WHEN NOT type THEN amount ELSE 0 END) as expenses
+     FROM transactions
+     WHERE account_id = ? AND created_at LIKE ?
+     GROUP BY month`,
+    [accountId, `${year}-%`]
+  );
+  return result.map(row => ({
+    month: row.month,
+    income: row.income || 0,
+    expenses: row.expenses || 0
+  }));
+};
+
 export {
   deleteDatabase,
   initializeDb,
@@ -344,5 +409,8 @@ export {
   getSavingTransactions,
   updateSavingGroupAmount,
   deleteSavingGroup,
-  deleteSavingTransactions
+  deleteSavingTransactions,
+  getMonthlySummaries,
+  upsertMonthlySummaries,
+  getYearTransactionTotals
 };

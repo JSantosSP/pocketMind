@@ -13,7 +13,10 @@ import {
   updateSavingGroup,
   updateSavingGroupAmount,
   getSavingTransactions,
-  deleteSavingGroup
+  deleteSavingGroup,
+  getMonthlySummaries,
+  upsertMonthlySummaries,
+  getYearTransactionTotals
 } from '../services/database';
 import Account from '../models/Account';
 import Transaction from '../models/Transaction';
@@ -281,6 +284,82 @@ const handleGetSavingTransactions = async (savingGroupId, callback) => {
   }
 };
 
+const handleGetYearHistory = async (accountId, year) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    expenses: null,
+    income: null
+  }));
+
+  if (year > currentYear) {
+    return months;
+  }
+
+  try {
+    const cached = await getMonthlySummaries(accountId, year);
+    const cachedByMonth = new Map(cached.map(summary => [summary.month, summary]));
+
+    const needsTotals = [];
+    for (let month = 1; month <= 12; month++) {
+      const isFuture = year === currentYear && month > currentMonth;
+      const isCurrent = year === currentYear && month === currentMonth;
+      if (isFuture) {
+        continue;
+      }
+      if (isCurrent || !cachedByMonth.has(month)) {
+        needsTotals.push(month);
+      }
+    }
+
+    let totalsByMonth = new Map();
+    if (needsTotals.length > 0) {
+      const totals = await getYearTransactionTotals(accountId, year);
+      totalsByMonth = new Map(totals.map(total => [total.month, total]));
+    }
+
+    const toPersist = [];
+    for (let month = 1; month <= 12; month++) {
+      const isFuture = year === currentYear && month > currentMonth;
+      const isCurrent = year === currentYear && month === currentMonth;
+
+      if (isFuture) {
+        continue;
+      }
+
+      if (!isCurrent && cachedByMonth.has(month)) {
+        const cachedMonth = cachedByMonth.get(month);
+        months[month - 1] = {
+          month,
+          expenses: cachedMonth.expenses || 0,
+          income: cachedMonth.income || 0
+        };
+        continue;
+      }
+
+      const totals = totalsByMonth.get(month);
+      const expenses = totals ? totals.expenses : 0;
+      const income = totals ? totals.income : 0;
+      months[month - 1] = { month, expenses, income };
+
+      if (!isCurrent) {
+        toPersist.push({ accountId, year, month, expenses, income });
+      }
+    }
+
+    if (toPersist.length > 0) {
+      await upsertMonthlySummaries(toPersist);
+    }
+
+    return months;
+  } catch (error) {
+    console.error('Error al obtener el historial anual:', error);
+    return months;
+  }
+};
+
 export {
   handleCreateAccount,
   handleGetAccounts,
@@ -299,5 +378,6 @@ export {
   handleGetSavingTransactions,
   handleGetSavingGroupById,
   handleCheckTransactionsGroup,
-  handleDeleteGrupo
+  handleDeleteGrupo,
+  handleGetYearHistory
 };

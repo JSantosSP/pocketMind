@@ -36,6 +36,11 @@ const OptionsScreen = ({ route }) => {
       onPress: () => navigation.navigate("DeleteGroupScreen", { accountId }),
     },
     {
+      label: 'Historial',
+      icon: <MaterialIcons name="history" size={24} color="white" />,
+      onPress: () => navigation.navigate("History", { accountId }),
+    },
+    {
       label: 'Configuración',
       icon: <AntDesign name="setting" size={24} color="white" />,
       onPress: () => navigation.navigate("Settings"),
